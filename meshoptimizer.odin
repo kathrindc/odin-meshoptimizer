@@ -3,7 +3,7 @@ package meshopt
 import _c "core:c"
 
 
-MESHOPTIMIZER_VERSION :: 220
+MESHOPTIMIZER_VERSION :: 230
 
 EncodeExpMode :: enum {
 	/* When encoding exponents, use separate values for each component (maximum quality) */
@@ -12,7 +12,7 @@ EncodeExpMode :: enum {
 	meshopt_EncodeExpSharedVector,
 	/* When encoding exponents, use shared value for each component of all vectors (best compression) */
 	meshopt_EncodeExpSharedComponent,
-	/* Experimental: When encoding exponents, use separate values for each component, but clamp to 0 (good quality if very small values are not important) */
+	/* When encoding exponents, use separate values for each component, but clamp to 0 (good quality if very small values are not important) */
 	meshopt_EncodeExpClamped,
 }
 
@@ -88,13 +88,16 @@ foreign meshoptimizer {
 	encodeIndexBufferBound :: proc(index_count: uint, vertex_count: uint) -> uint ---
 	encodeIndexVersion :: proc(version: int) ---
 	decodeIndexBuffer :: proc(destination: rawptr, index_count: uint, index_size: uint, buffer: ^_c.uchar, buffer_size: uint) -> int ---
+	decodeIndexVersion :: proc(buffer: ^_c.uchar, buffer_size: uint) -> int ---
 	encodeIndexSequence :: proc(buffer: ^_c.uchar, buffer_size: uint, indices: ^_c.uint, index_count: uint) -> uint ---
 	encodeIndexSequenceBound :: proc(index_count: uint, vertex_count: uint) -> uint ---
 	decodeIndexSequence :: proc(destination: rawptr, index_count: uint, index_size: uint, buffer: ^_c.uchar, buffer_size: uint) -> int ---
 	encodeVertexBuffer :: proc(buffer: ^_c.uchar, buffer_size: uint, vertices: rawptr, vertex_count: uint, vertex_size: uint) -> uint ---
 	encodeVertexBufferBound :: proc(vertex_count: uint, vertex_size: uint) -> uint ---
+	encodeVertexBufferLevel :: proc(buffer: ^_c.uchar, buffer_size: uint, vertices: rawptr, vertex_count: uint, vertex_size: uint, level: int) -> uint ---
 	encodeVertexVersion :: proc(version: int) ---
 	decodeVertexBuffer :: proc(destination: rawptr, vertex_count: uint, vertex_size: uint, buffer: ^_c.uchar, buffer_size: uint) -> int ---
+	decodeVertexVersion :: proc(buffer: ^_c.uchar, buffer_size: uint) -> int ---
 	stripify :: proc(destination: ^_c.uint, indices: ^_c.uint, index_count: uint, vertex_count: uint, restart_index: _c.uint) -> uint ---
 	stripifyBound :: proc(index_count: uint) -> uint ---
 	unstripify :: proc(destination: ^_c.uint, indices: ^_c.uint, index_count: uint, restart_index: _c.uint) -> uint ---
@@ -105,8 +108,11 @@ foreign meshoptimizer {
 	buildMeshlets :: proc(meshlets: ^Meshlet, meshlet_vertices: ^_c.uint, meshlet_triangles: ^_c.uchar, indices: ^_c.uint, index_count: uint, vertex_positions: ^_c.float, vertex_count: uint, vertex_positions_stride: uint, max_vertices: uint, max_triangles: uint, cone_weight: _c.float) -> uint ---
 	buildMeshletsScan :: proc(meshlets: ^Meshlet, meshlet_vertices: ^_c.uint, meshlet_triangles: ^_c.uchar, indices: ^_c.uint, index_count: uint, vertex_count: uint, max_vertices: uint, max_triangles: uint) -> uint ---
 	buildMeshletsBound :: proc(index_count: uint, max_vertices: uint, max_triangles: uint) -> uint ---
+	buildMeshletsFlex :: proc(meshlets: ^Meshlet, meshlet_vertices: ^_c.uint, meshlet_triangles: ^_c.uchar, indices: ^_c.uint, index_count: uint, vertex_positions: ^_c.float, vertex_count: uint, vertex_positions_stride: uint, max_vertices: uint, min_triangles: uint, max_triangles: uint, cone_weight: _c.float, split_factor: _c.float) -> uint ---
 	computeClusterBounds :: proc(indices: ^_c.uint, index_count: uint, vertex_positions: ^_c.float, vertex_count: uint, vertex_positions_stride: uint) -> Bounds ---
 	computeMeshletBounds :: proc(meshlet_vertices: ^_c.uint, meshlet_triangles: ^_c.uchar, triangle_count: uint, vertex_positions: ^_c.float, vertex_count: uint, vertex_positions_stride: uint) -> Bounds ---
+	computeSphereBounds :: proc(positions: ^_c.float, count: uint, positions_stride: uint, radii: ^_c.float, radii_stride: uint) -> Bounds ---
+	partitionClusters :: proc(destination: ^_c.uint, cluster_indices: ^_c.uint, total_index_count: uint, cluster_index_counts: ^_c.uint, cluster_count: uint, vertex_count: uint, target_partition_size: uint) -> uint ---
 	setAllocator :: proc(allocate: (proc "c" (_: uint) -> rawptr), deallocate: proc "c" (_: rawptr)) ---
 	decodeFilterOct :: proc(buffer: rawptr, count: uint, stride: uint) ---
 	decodeFilterQuat :: proc(buffer: rawptr, count: uint, stride: uint) ---
@@ -114,11 +120,14 @@ foreign meshoptimizer {
 	encodeFilterOct :: proc(destination: rawptr, count: uint, stride: uint, bits: int, data: ^_c.float) ---
 	encodeFilterQuat :: proc(destination: rawptr, count: uint, stride: uint, bits: int, data: ^_c.float) ---
 	encodeFilterExp :: proc(destination: rawptr, count: uint, stride: uint, bits: int, data: ^_c.float) ---
-	simplifyWithAttributes :: proc(destination: rawptr, indices: ^_c.uint, index_count: uint, vertex_positions: ^_c.float, vertex_count: uint, vertex_positions_stride: uint, vertex_attributes: ^_c.float, vertex_attributes_stride: uint, attribute_weights: ^_c.float, attribute_count: uint, vertex_lock: ^u8, target_index_count: uint, target_error: f32, options: _c.uint, result_error: ^_c.float) ---
+	simplifyWithAttributes :: proc(destination: rawptr, indices: ^_c.uint, index_count: uint, vertex_positions: ^_c.float, vertex_count: uint, vertex_positions_stride: uint, vertex_attributes: ^_c.float, vertex_attributes_stride: uint, attribute_weights: ^_c.float, attribute_count: uint, vertex_lock: ^u8, target_index_count: uint, target_error: f32, options: _c.uint, result_error: ^_c.float) -> uint ---
 	simplify :: proc(destination: ^_c.uint, indices: ^_c.uint, index_count: uint, vertex_positions: ^_c.float, vertex_count: uint, vertex_positions_stride: uint, target_index_count: uint, target_error: _c.float, options: _c.uint, result_error: ^_c.float) -> uint ---
 	simplifySloppy :: proc(destination: ^_c.uint, indices: ^_c.uint, index_count: uint, vertex_positions: ^_c.float, vertex_count: uint, vertex_positions_stride: uint, target_index_count: uint, target_error: _c.float, result_error: ^_c.float) -> uint ---
 	simplifyPoints :: proc(destination: ^_c.uint, vertex_positions: ^_c.float, vertex_count: uint, vertex_positions_stride: uint, target_vertex_count: uint) -> uint ---
 	simplifyScale :: proc(vertex_positions: ^_c.float, vertex_count: uint, vertex_positions_stride: uint) -> _c.float ---
 	spatialSortRemap :: proc(destination: ^_c.uint, vertex_positions: ^_c.float, vertex_count: uint, vertex_positions_stride: uint) ---
 	spatialSortTriangles :: proc(destination: ^_c.uint, indices: ^_c.uint, index_count: uint, vertex_positions: ^_c.float, vertex_count: uint, vertex_positions_stride: uint) ---
+	quantizeHalf :: proc(v: _c.float) -> _c.ushort ---
+	quantizeFloat :: proc(v: _c.float, N: _c.int) -> _c.float ---
+	dequantizeHalf :: proc(h: _c.ushort) -> _c.float ---
 }
