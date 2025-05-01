@@ -2,7 +2,6 @@ package meshopt
 
 import _c "core:c"
 
-
 MESHOPTIMIZER_VERSION :: 230
 
 EncodeExpMode :: enum {
@@ -20,7 +19,6 @@ SimplifyLockBorder :: 1
 SimplifySparse :: 2
 SimplifyErrorAbsolute :: 4
 SimplifyPrune :: 8
-
 
 Stream :: struct {
 	data:   rawptr,
@@ -63,9 +61,12 @@ Bounds :: struct {
 	cone_cutoff_s8: _c.schar,
 }
 
-
 /***** meshoptimizer *****/
-foreign import meshoptimizer "external/meshoptimizer.lib"
+when ODIN_DEBUG {
+	foreign import meshoptimizer "clib/debug.a"
+} else {
+	foreign import meshoptimizer "clib/release.a"
+}
 
 /* Procedures */
 @(link_prefix = "meshopt_")
